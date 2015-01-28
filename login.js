@@ -77,9 +77,20 @@ var get_messages = function(seq, callback){
 		if(raw.ms){
 			_.each(raw.ms, function(elem){
 				if(elem.type == 'm_messaging' && elem.event != 'read' && elem.author_fbid != fb_userid){
-					// console.log(elem)
-					console.log(elem.author_name+"("+elem.author_fbid+"): "+elem.message)
-					send_messages(elem.author_fbid)
+					
+					//person message
+					if(elem.tid.substr(0,3) == 'mid'){
+						console.log('[個人] '+elem.author_name+"("+elem.author_fbid+"): "+elem.message)
+						// send_messages(elem.author_fbid)
+					}
+
+					//group message
+					else if(elem.tid.substr(0,3) == 'id.'){
+						var thread_fbid = elem.tid.split(/id\.(.+)/)[1]
+						console.log('[群組] '+elem.thread_name+"("+thread_fbid+"): "+elem.message)
+						// send_messages(elem.author_fbid, thread_fbid)
+					}
+					
 				}
 			})
 		}
@@ -88,7 +99,7 @@ var get_messages = function(seq, callback){
 	})
 }
 
-var send_messages = function(receiver){
+var send_messages = function(receiver, tid){
 	data = {
         "message_batch[0][action_type]": "ma-type:user-generated-message",
         "message_batch[0][author]": "fbid:"+fb_userid,
@@ -97,8 +108,7 @@ var send_messages = function(receiver){
         "message_batch[0][signatureID]": "3c132b09",
         "message_batch[0][ui_push_phase]": "V3",
         "message_batch[0][status]": "0",
-        "message_batch[0][specific_to_list][0]": "fbid:"+receiver, //this is receiver
-        "message_batch[0][specific_to_list][1]": "fbid:"+fb_userid, //this is sender
+        
         "client": "mercury",
         "__user": fb_userid,
         "__a": "1",
@@ -109,6 +119,19 @@ var send_messages = function(receiver){
         "__rev": "1436610",
     }
 
+	if(tid){
+		data['message_batch[0][thread_fbid]'] = tid
+	}
+
+	if(!tid){
+		var persondata = {
+			"message_batch[0][specific_to_list][0]": "fbid:"+receiver, //this is receiver
+        	"message_batch[0][specific_to_list][1]": "fbid:"+fb_userid, //this is sender
+		}
+		data = _.extend(data, persondata);
+	}
+
+
     fbrequest({
 		method: 'POST',
 		url: message,
@@ -117,6 +140,7 @@ var send_messages = function(receiver){
 		console.log("已回復")
 	})
 }
+
 
 
 
