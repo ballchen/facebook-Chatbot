@@ -77,9 +77,9 @@ var get_messages = function(seq, callback){
 		if(raw.ms){
 			_.each(raw.ms, function(elem){
 				if(elem.type == 'm_messaging' && elem.event != 'read' && elem.author_fbid != fb_userid){
-					console.log(elem)
+					// console.log(elem)
 					console.log(elem.author_name+"("+elem.author_fbid+"): "+elem.message)
-					// send_messages(elem.author_fbid)
+					send_messages(elem.author_fbid)
 				}
 			})
 		}
